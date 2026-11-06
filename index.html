@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>NFSU2 Chromecast Auto-Play</title>
+    <style>
+        body, iframe { margin: 0; padding: 0; width: 100vw; height: 100vh; border: none; overflow: hidden; background: #000; }
+    </style>
+</head>
+<body>
+    <!-- Target the exact HTTPS URL -->
+    <iframe id="game" src="https://nfsu2.xyz/" allow="autoplay; gamepad"></iframe>
+
+    <script>
+        const frame = document.getElementById('game');
+        
+        // Polling loop to aggressively look for the play button
+        const clickInterval = setInterval(() => {
+            try {
+                const frameDoc = frame.contentDocument || frame.contentWindow.document;
+                // Looks for standard buttons or text elements saying "Play" or "Loading"
+                const buttons = Array.from(frameDoc.querySelectorAll('button, div, span'));
+                const playBtn = buttons.find(el => el.textContent.trim().toLowerCase() === 'play');
+                
+                if (playBtn) {
+                    playBtn.click();
+                    console.log("Successfully triggered play action!");
+                    clearInterval(clickInterval); // Stop trying once clicked
+                }
+            } catch (err) {
+                // If standard security completely locks the iframe DOM, 
+                // we fall back to a broad programmatic enter-key trigger event
+                frame.contentWindow.postMessage('click', '*');
+            }
+        }, 1000); // Tries every 1 second
+
+        // Safety timeout to clear resources if it fails
+        setTimeout(() => clearInterval(clickInterval), 15000);
+    </script>
+</body>
+</html>
